@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snap Quad – Clickable Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#13294B; --orange:#C73E1D; --cream:#F3ECE0; --white:#FFFFFF;
+    --gray:#5B616E; --red:#B42318; --line:#D9D0C1; --ink:#1F2933;
+    --r:6px; --pad:20px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;color:var(--ink);background:var(--cream);line-height:1.4}
+  button,input,select{font:inherit}
+  a{color:var(--navy)}
+  :focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+  .app{min-height:100%;display:flex;flex-direction:column}
+  main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:16px var(--pad) 96px}
+  h1{font-size:28px;line-height:1.15;margin:0 0 4px}
+  h2{font-size:20px;margin:0 0 8px}
+  .small{font-size:13px;color:var(--gray)}
+  .muted{color:var(--gray)}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{justify-content:space-between}
+  .stack>*+*{margin-top:12px}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r);border:2px solid var(--navy);background:var(--navy);color:#fff;font-weight:600;cursor:pointer;text-decoration:none}
+  .btn.block{width:100%}
+  .btn.outline{background:transparent;color:var(--navy)}
+  .btn.danger{background:var(--red);border-color:var(--red)}
+  .btn.vote{background:var(--orange);border-color:var(--orange);font-size:18px}
+  .btn.vote.on{background:#fff;color:var(--orange)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .link{background:none;border:none;padding:6px 0;color:var(--navy);text-decoration:underline;cursor:pointer;min-height:32px;font-weight:600}
+  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;min-height:44px}
+
+  /* Forms */
+  label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+  input[type=text],input[type=email],input[type=password]{width:100%;min-height:44px;padding:10px 12px;border:1px solid #9AA0A8;border-radius:var(--r);background:#fff}
+  .field+.field{margin-top:14px}
+  .field.err input{border:2px solid var(--red)}
+  .errmsg{color:var(--red);font-size:14px;margin-top:6px;display:flex;gap:6px}
+  .hint{font-size:13px;color:var(--gray);margin-top:6px}
+  .card{background:#fff;border-radius:var(--r);padding:20px;border:1px solid var(--line)}
+  .auth{max-width:420px;margin:24px auto}
+
+  /* Header / nav */
+  header.top{position:sticky;top:0;z-index:10;background:var(--cream);border-bottom:1px solid var(--line)}
+  header .in{max-width:1080px;margin:0 auto;padding:10px var(--pad);display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{font-weight:700;font-size:20px;color:var(--navy);text-decoration:none}
+  .topnav{display:none;gap:4px}
+  .topnav button{background:none;border:none;padding:10px 12px;border-radius:var(--r);color:var(--gray);font-weight:600;cursor:pointer;min-height:44px}
+  .topnav button[aria-current=page]{color:var(--navy);box-shadow:inset 0 -3px 0 var(--navy)}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;border:none;font-weight:700;cursor:pointer}
+  .menu{position:absolute;right:var(--pad);top:56px;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:8px;min-width:220px;z-index:30}
+  .menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:12px;border-radius:4px;cursor:pointer;min-height:44px}
+  .menu button:hover{background:var(--cream)}
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+  nav.tabs button{flex:1;background:none;border:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--gray);font-size:13px;cursor:pointer;min-height:56px}
+  nav.tabs button svg{width:24px;height:24px}
+  nav.tabs button[aria-current=page]{color:var(--navy);font-weight:700}
+  @media (min-width:768px){
+    nav.tabs{display:none}
+    .topnav{display:flex}
+    main{padding:24px 32px 64px}
+    :root{--pad:32px}
+  }
+
+  /* Today */
+  .drop{border:2px dashed #9AA0A8;border-radius:var(--r);background:#fff;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;cursor:pointer;width:100%}
+  .drop:hover{border-color:var(--navy)}
+  .preview{width:100%;max-height:380px;object-fit:cover;border-radius:var(--r);display:block;background:#ddd}
+  .today-wrap{max-width:560px}
+  .tag{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border-radius:999px;padding:4px 12px;font-weight:600;font-size:14px}
+  .tag.ok{background:#1E6B3A}
+  .progress{height:8px;background:#E3DCCF;border-radius:4px;overflow:hidden}
+  .progress>div{height:100%;background:var(--navy);width:0;transition:width .15s linear}
+  .rules{font-size:13px;color:var(--gray)}
+
+  /* Gallery */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+  @media (min-width:768px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media (min-width:1100px){.grid{grid-template-columns:repeat(4,1fr)}}
+  .tile{background:none;border:none;padding:0;text-align:left;cursor:pointer;color:inherit}
+  .tile img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--r);display:block}
+  .tile .meta{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:6px;font-size:14px}
+  .tile .meta b{font-weight:600}
+  .badge{font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:#fff;border:1px solid var(--orange);color:var(--orange);white-space:nowrap}
+  .badge.you{border-color:var(--navy);color:var(--navy)}
+  select{min-height:44px;padding:0 10px;border:1px solid #9AA0A8;border-radius:var(--r);background:#fff}
+  .empty{text-align:center;padding:64px 16px}
+  .empty svg{width:64px;height:64px;color:var(--gray)}
+
+  /* Photo view */
+  .photo-layout{display:grid;gap:20px}
+  @media (min-width:768px){.photo-layout{grid-template-columns:1.3fr 1fr;align-items:start}}
+  .photo-layout img{width:100%;border-radius:var(--r);display:block;aspect-ratio:1/1;object-fit:cover}
+  .more-wrap{position:relative;display:inline-block}
+  .more-menu{position:absolute;right:0;bottom:48px;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;min-width:220px;z-index:20}
+  .more-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:12px;cursor:pointer;border-radius:4px;min-height:44px}
+  .more-menu button:hover{background:var(--cream)}
+
+  /* Lists */
+  .list{list-style:none;margin:16px 0 0;padding:0;background:#fff;border:1px solid var(--line);border-radius:var(--r)}
+  .list li+li{border-top:1px solid var(--line)}
+  .list button{display:flex;align-items:center;gap:14px;width:100%;background:none;border:none;padding:12px 14px;text-align:left;cursor:pointer;min-height:72px;color:inherit}
+  .list img{width:56px;height:56px;border-radius:var(--r);object-fit:cover}
+  .rank{font-size:24px;font-weight:700;width:28px;text-align:center;color:var(--navy)}
+  .chev{margin-left:auto;color:var(--gray)}
+
+  /* Dialog + toast */
+  .scrim{position:fixed;inset:0;background:rgba(19,41,75,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+  @media (min-width:768px){.scrim{align-items:center}}
+  .dialog{background:#fff;width:100%;max-width:460px;border-radius:12px 12px 0 0;padding:24px}
+  @media (min-width:768px){.dialog{border-radius:12px}}
+  .radio{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:400;font-size:16px;margin:0;cursor:pointer}
+  .radio input{width:20px;height:20px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--navy);color:#fff;border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:16px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2);width:max-content;max-width:calc(100% - 32px)}
+  @media (min-width:768px){.toast{bottom:32px}}
+  .toast button{background:none;border:none;color:#fff;font-weight:700;text-decoration:underline;cursor:pointer;min-height:36px}
+
+  /* Prototype tools */
+  .proto{position:fixed;left:12px;bottom:72px;z-index:40}
+  @media (min-width:768px){.proto{bottom:16px}}
+  .proto>button{background:#fff;border:1px dashed var(--gray);color:var(--gray);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+  .proto .panel{position:absolute;bottom:40px;left:0;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;width:240px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  .proto .panel button{display:block;width:100%;text-align:left;background:none;border:none;padding:8px;cursor:pointer;font-size:14px;border-radius:4px}
+  .proto .panel button:hover{background:var(--cream)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div aria-live="polite" class="sr" id="live"></div>
+
+<script>
+/* ---------- Placeholder "photos" (generated SVG, no external images) ---------- */
+function photo(seed){
+  const skies=[["#F6C28B","#F3ECE0"],["#9EC5E8","#E7F0F7"],["#F2A65A","#FCE3C4"],["#B7C9A8","#EEF2E6"],["#D8B4E2","#F4ECF7"],["#FFD27F","#FFF4DD"]];
+  const grounds=["#6E8B4E","#8C6B4F","#5E7A8C","#7A6A58","#4F6D5A","#9C8466"];
+  const s=skies[seed%skies.length], g=grounds[(seed*3)%grounds.length];
+  const cx=80+(seed*37)%240, cy=190+(seed*13)%60, r=34+(seed*7)%30;
+  const shapes=[
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#E8742A"/><rect x="${cx-4}" y="${cy-r-14}" width="8" height="16" rx="3" fill="#5B4A2E"/>`,
+    `<rect x="${cx-r}" y="${cy-r}" width="${r*2}" height="${r*1.6}" rx="10" fill="#E4572E"/>`,
+    `<path d="M${cx} ${cy-r} L${cx+r} ${cy+r/2} L${cx-r} ${cy+r/2}Z" fill="#F08A24"/>`,
+    `<ellipse cx="${cx}" cy="${cy}" rx="${r*1.3}" ry="${r*.7}" fill="#D9632B"/>`
+  ];
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s[0]}"/><stop offset="1" stop-color="${s[1]}"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)"/><circle cx="${330-(seed*29)%200}" cy="70" r="26" fill="#fff" opacity=".7"/><rect y="250" width="400" height="150" fill="${g}"/><rect x="${(seed*53)%300}" y="150" width="60" height="100" fill="#8A7F72" opacity=".6"/>${shapes[seed%shapes.length]}</svg>`;
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
+
+/* ---------- Icons ---------- */
+const I={
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/></svg>',
+  gallery:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M10 17h4v4h-4z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>',
+  heart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z"/></svg>',
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg>',
+  dots:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:none;margin-top:2px"><path d="M12 2L1 21h22zm-1 7h2v6h-2zm0 8h2v2h-2z"/></svg>'
+};
+
+/* ---------- Data ---------- */
+const today=new Date();
+const fmt=(d,o)=>d.toLocaleDateString("en-US",o);
+const daysAgo=n=>{const d=new Date(today);d.setDate(d.getDate()-n);return d};
+const PROMPT="Something orange";
+
+function seedPhotos(){
+  return [
+    {id:1,user:"lwong5",caption:"traffic cone by Grainger",votes:12,mins:35,seed:2},
+    {id:2,user:"mrodri7",caption:"pumpkins outside the union",votes:9,mins:120,seed:0},
+    {id:3,user:"kpatel3",caption:"Illini orange on the Alma Mater",votes:7,mins:200,seed:5},
+    {id:4,user:"dnguyen",caption:"sunset from the 6th floor",votes:4,mins:15,seed:4},
+    {id:5,user:"aokafor",caption:"maple leaves on the Quad",votes:3,mins:300,seed:3},
+    {id:6,user:"bchen9",caption:"MTD bus stripe",votes:2,mins:55,seed:1},
+    {id:7,user:"sgarcia",caption:"clementine at lunch",votes:1,mins:80,seed:7},
+    {id:8,user:"tmiller",caption:"orange bike lock",votes:0,mins:5,seed:6}
+  ].map(p=>({...p,voted:false,hidden:false}));
+}
+const PAST=[
+  {key:"spot",title:"Your study spot",date:daysAgo(1),count:38,base:10},
+  {key:"squirrels",title:"Squirrels",date:daysAgo(2),count:51,base:20},
+  {key:"bikes",title:"Bikes on the Quad",date:daysAgo(3),count:44,base:30},
+  {key:"sunset",title:"Sunset",date:daysAgo(4),count:47,base:40}
+];
+const NAMES=["kpatel3","dnguyen","lwong5","mrodri7","aokafor","bchen9"];
+
+let S;
+function reset(){
+  S={screen:"login",user:null,photos:seedPhotos(),sort:"newest",current:null,from:"gallery",
+     upload:{file:null,url:null,caption:"",error:null,progress:null,done:false},
+     dialog:null,toast:null,menu:false,more:false,proto:false,forceEmpty:false,past:null,errors:{},notice:null,form:{}};
+}
+reset();
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ago=m=>m<60?`${m} min ago`:`${Math.round(m/60)} hour${Math.round(m/60)>1?"s":""} ago`;
+function say(t){$("#live").textContent=t}
+let toastTimer;
+function toast(text,undo){S.toast={text,undo};say(text);render();clearTimeout(toastTimer);toastTimer=setTimeout(()=>{S.toast=null;render()},undo?6000:3500)}
+function go(screen,extra){Object.assign(S,{screen,menu:false,more:false,errors:{},notice:null},extra||{});render();window.scrollTo(0,0)}
+function visiblePhotos(){
+  if(S.forceEmpty) return [];
+  let ps=S.photos.filter(p=>!p.hidden);
+  ps=[...ps].sort(S.sort==="votes"?(a,b)=>b.votes-a.votes:(a,b)=>a.mins-b.mins);
+  return ps;
+}
+const me=()=>S.user&&S.user.name;
+
+/* ---------- Views ---------- */
+function shell(inner,tab){
+  const tabs=[["today","Today",I.camera],["gallery","Gallery",I.gallery],["leaderboard","Leaderboard",I.trophy],["past","Past prompts",I.cal]];
+  const cur=t=>tab===t?'aria-current="page"':"";
+  return `
+  <header class="top"><div class="in">
+    <a class="brand" href="#" data-go="today">Snap Quad</a>
+    <nav class="topnav" aria-label="Main">${tabs.map(([k,l])=>`<button data-go="${k}" ${cur(k)}>${l}</button>`).join("")}</nav>
+    <button class="avatar" aria-label="Account menu" aria-expanded="${S.menu}" data-act="menu">${esc(S.user.name[0].toUpperCase())}</button>
+    ${S.menu?`<div class="menu" role="menu"><div class="small" style="padding:8px 12px">Signed in as<br><b style="color:var(--ink)">${esc(S.user.email)}</b></div><button role="menuitem" data-act="logout">Log out</button></div>`:""}
+  </div></header>
+  <main id="main">${inner}</main>
+  <nav class="tabs" aria-label="Main">${tabs.map(([k,l,ic])=>`<button data-go="${k}" ${cur(k)}>${ic}<span>${l}</span></button>`).join("")}</nav>`;
+}
+
+function field(id,label,type,val,hint){
+  const e=S.errors[id];
+  return `<div class="field ${e?"err":""}"><label for="${id}">${label}</label>
+    <input id="${id}" name="${id}" type="${type}" value="${esc(val||"")}" ${e?`aria-invalid="true" aria-describedby="${id}-e"`:""} autocomplete="off">
+    ${e?`<div class="errmsg" id="${id}-e">${I.warn}<span>${e}</span></div>`:hint?`<div class="hint">${hint}</div>`:""}</div>`;
+}
+
+function vLogin(){
+  const f=S.form;
+  return `<main><div class="auth">
+    <h1 style="color:var(--navy)">Snap Quad</h1>
+    <p class="muted" style="margin-top:0">One campus photo prompt a day. Log in with your Illinois email.</p>
+    <form class="card" id="loginForm" novalidate>
+      ${field("email","Email","email",f.email,"")}
+      ${field("password","Password","password",f.password,"")}
+      <div style="margin-top:18px"><button class="btn block" type="submit">Log in</button></div>
+      <button class="link" type="button" data-act="forgot">Forgot password?</button>
+      ${S.notice?`<p class="small" role="status">${S.notice}</p>`:""}
+    </form>
+    <div class="card" style="margin-top:16px;text-align:center">
+      <p style="margin:0 0 10px">No account yet?</p>
+      <button class="btn outline block" data-go="signup">Create an account</button>
+    </div>
+    <p class="small" style="text-align:center;margin-top:16px">Prototype tip: any <b>@illinois.edu</b> email and an 8+ character password works.</p>
+  </div></main>`;
+}
+
+function vSignup(){
+  const f=S.form;
+  return `<main><div class="auth">
+    <button class="back link" data-go="login">${I.back} Log in</button>
+    <h1 style="color:var(--navy)">Create your account</h1>
+    <p class="muted" style="margin-top:0">Only @illinois.edu emails can join.</p>
+    <form class="card" id="signupForm" novalidate>
+      ${field("email","Illinois email","email",f.email,"Example: jlee42@illinois.edu")}
+      ${field("name","Display name","text",f.name,"Shown next to your photos")}
+      ${field("password","Password","password",f.password,"At least 8 characters")}
+      ${field("confirm","Confirm password","password",f.confirm,"")}
+      <div style="margin-top:18px"><button class="btn block" type="submit">Create account</button></div>
+    </form>
+  </div></main>`;
+}
+
+function vToday(){
+  const u=S.upload, mine=S.photos.find(p=>p.mine);
+  const head=`<p class="small" style="margin:0">${fmt(today,{weekday:"long",month:"short",day:"numeric"})}</p>
+    <h1>${PROMPT}</h1>
+    <p class="rules" style="margin-top:0">Closes at midnight · one photo per person · voting ends at midnight</p>`;
+  if(mine){
+    return shell(`<div class="today-wrap stack">${head}
+      <span class="tag ok">${I.check} Submitted</span>
+      <img class="preview" src="${mine.src}" alt="Your submission: ${esc(mine.caption||"untitled")}">
+      ${mine.caption?`<p style="margin:0">“${esc(mine.caption)}”</p>`:""}
+      <p class="muted">Your photo is in today's gallery with ${mine.votes} vote${mine.votes===1?"":"s"}. You can post again tomorrow.</p>
+      <button class="btn block" data-go="gallery">See today's gallery</button>
+    </div>`,"today");
+  }
+  const uploading=u.progress!==null;
+  return shell(`<div class="today-wrap stack">${head}
+    <input type="file" id="file" accept="image/jpeg,image/png,image/heic" class="sr" tabindex="-1">
+    ${u.url?`
+      <img class="preview" src="${u.url}" alt="Preview of the photo you chose">
+      ${uploading?"":`<div class="row" style="gap:20px"><button class="link" data-act="pick">Choose a different photo</button><button class="link" data-act="clearPhoto">Remove</button></div>`}
+    `:`
+      <button class="drop" data-act="pick" aria-describedby="drophint">
+        <span style="color:var(--gray)">${I.gallery.replace('<svg','<svg width="48" height="48"')}</span>
+        <b>Tap to choose a photo</b>
+        <span class="small" id="drophint">JPG or PNG, up to 10 MB</span>
+      </button>
+      <button class="link" data-act="sample">No photo handy? Use a sample photo</button>
+    `}
+    ${u.error?`<div class="errmsg" role="alert">${I.warn}<span>${u.error}</span></div>`:""}
+    <div class="field"><label for="caption">Caption (optional)</label>
+      <input id="caption" type="text" maxlength="80" placeholder="Add a caption" value="${esc(u.caption)}" ${uploading?"disabled":""}>
+      <div class="hint">Up to 80 characters</div></div>
+    ${uploading?`<div><div class="row between small"><span>Uploading…</span><span>${u.progress}%</span></div><div class="progress" role="progressbar" aria-valuenow="${u.progress}" aria-valuemin="0" aria-valuemax="100"><div style="width:${u.progress}%"></div></div></div>`:""}
+    <button class="btn block" data-act="submit" ${!u.url||uploading?"disabled":""}>${uploading?"Submitting…":"Submit photo"}</button>
+    ${!u.url?`<p class="small" style="margin:0">Choose a photo to enable Submit.</p>`:""}
+  </div>`,"today");
+}
+
+function tile(p){
+  return `<button class="tile" data-open="${p.id}">
+    <img src="${p.src||photo(p.seed)}" alt="${esc(p.caption||"Photo")} by ${esc(p.user)}">
+    <div class="meta"><span><b>${esc(p.user)}</b> · ${p.votes}</span>
+    ${p.mine?`<span class="badge you">You</span>`:p.voted?`<span class="badge">✓ Voted</span>`:""}</div>
+  </button>`;
+}
+
+function vGallery(){
+  const ps=visiblePhotos();
+  const body=ps.length?`<div class="grid">${ps.map(tile).join("")}</div>`:
+    `<div class="empty">${I.camera.replace("<svg",'<svg aria-hidden="true"')}<h2>No photos yet</h2><p class="muted">Be the first to post for ${PROMPT}.</p><button class="btn" data-go="today">Go to today's prompt</button></div>`;
+  return shell(`
+    <div class="row between" style="align-items:flex-end;flex-wrap:wrap">
+      <div><h1>Gallery</h1><p class="small" style="margin:0">${PROMPT} · ${ps.length} photo${ps.length===1?"":"s"} · voting ends at midnight</p></div>
+      <div><label for="sort" class="sr">Sort photos</label>
+        <select id="sort"><option value="newest" ${S.sort==="newest"?"selected":""}>Newest</option><option value="votes" ${S.sort==="votes"?"selected":""}>Most votes</option></select></div>
+    </div>
+    <p class="small" style="margin:8px 0 0">Tap a photo to vote. You get one vote per photo, and you can undo it.</p>
+    ${body}`,"gallery");
+}
+
+function vPhoto(){
+  const p=S.current;
+  if(!p) return vGallery();
+  const closed=!!p.past;
+  const backTo=closed?["pastday",S.past.title]:["gallery","Gallery"];
+  let action;
+  if(closed) action=`<p class="tag">${I.trophy.replace("<svg",'<svg width="16" height="16"')} ${p.rank?["1st","2nd","3rd"][p.rank-1]||p.rank+"th":""} · ${p.votes} votes · voting closed</p>`;
+  else if(p.mine) action=`<button class="btn vote block" disabled>${I.heart} ${p.votes} votes</button><p class="small" style="text-align:center">This is your photo, so you can't vote for it.</p>`;
+  else action=`<button class="btn vote block ${p.voted?"on":""}" data-act="vote" aria-pressed="${p.voted}">${p.voted?I.check+" Voted · "+p.votes+" votes":I.heart+" Vote · "+p.votes+" votes"}</button>
+     <p class="small" style="text-align:center;margin:6px 0 0">${p.voted?"Tap again to undo your vote.":"Votes count until midnight."}</p>`;
+  return shell(`
+    <button class="back link" data-go="${backTo[0]}">${I.back} ${backTo[1]}</button>
+    <div class="photo-layout">
+      <img src="${p.src||photo(p.seed)}" alt="${esc(p.caption||"Photo")} by ${esc(p.user)}">
+      <div class="stack">
+        <div class="row between"><b style="font-size:18px">${esc(p.user)}</b><span class="small">${closed?fmt(S.past.date,{month:"short",day:"numeric"}):ago(p.mins)}</span></div>
+        <p style="margin:0">${esc(p.caption||"")}</p>
+        ${action}
+        ${closed||p.mine?"":`<div style="text-align:right"><div class="more-wrap">
+          <button class="link" data-act="more" aria-expanded="${S.more}" aria-haspopup="menu">${I.dots} More</button>
+          ${S.more?`<div class="more-menu" role="menu"><button role="menuitem" data-act="report">Report this photo…</button><button role="menuitem" data-act="hide">Hide from my gallery</button></div>`:""}
+        </div></div>`}
+      </div>
+    </div>`,"gallery");
+}
+
+function vLeaderboard(){
+  const ps=[...S.photos.filter(p=>!p.hidden)].sort((a,b)=>b.votes-a.votes).slice(0,10);
+  return shell(`<h1>Leaderboard</h1>
+    <p class="small" style="margin:0">Top photos for ${PROMPT} · updates as votes come in · final at midnight</p>
+    <ul class="list">${ps.map((p,i)=>`<li><button data-open="${p.id}"><span class="rank">${i+1}</span><img src="${p.src||photo(p.seed)}" alt=""><span><b>${esc(p.user)}</b>${p.mine?' <span class="badge you">You</span>':""}<br><span class="small">${p.votes} vote${p.votes===1?"":"s"} · ${esc(p.caption||"")}</span></span><span class="chev">›</span></button></li>`).join("")}</ul>`,"leaderboard");
+}
+
+function vPast(){
+  return shell(`<h1>Past prompts</h1><p class="small" style="margin:0">Tap a prompt to see its photos and winners.</p>
+    <ul class="list">${PAST.map(d=>`<li><button data-past="${d.key}"><img src="${photo(d.base)}" alt=""><span><b>${d.title}</b><br><span class="small">${fmt(d.date,{weekday:"short",month:"short",day:"numeric"})} · ${d.count} photos · winner ${NAMES[d.base%NAMES.length]}</span></span><span class="chev">›</span></button></li>`).join("")}</ul>`,"past");
+}
+
+function pastPhotos(d){
+  return Array.from({length:8},(_,i)=>({id:"p"+d.key+i,user:NAMES[(d.base+i)%NAMES.length],caption:d.title.toLowerCase()+" #"+(i+1),votes:Math.max(0,20-i*3-(d.base%5)),seed:d.base+i,past:true,rank:i+1}));
+}
+function vPastDay(){
+  const d=S.past, ps=pastPhotos(d);
+  return shell(`<button class="back link" data-go="past">${I.back} Past prompts</button>
+    <h1>${d.title}</h1>
+    <p class="small" style="margin:0 0 10px">${fmt(d.date,{weekday:"long",month:"short",day:"numeric"})} · ${d.count} photos · voting closed</p>
+    <span class="tag">${I.trophy.replace("<svg",'<svg width="16" height="16"')} Winner: ${ps[0].user} · ${ps[0].votes} votes</span>
+    <div class="grid">${ps.map(p=>`<button class="tile" data-openpast="${p.id}"><img src="${photo(p.seed)}" alt="${esc(p.caption)} by ${esc(p.user)}"><div class="meta"><span><b>${p.rank<=3?["1st","2nd","3rd"][p.rank-1]+" · ":""}${esc(p.user)}</b></span><span class="small">${p.votes}</span></div></button>`).join("")}</div>`,"past");
+}
+
+function overlays(){
+  let h="";
+  if(S.dialog==="report"){
+    const r=S.reportReason;
+    const reasons=["Doesn't match the prompt","Inappropriate or offensive","Not taken by this person","Something else"];
+    h+=`<div class="scrim" data-act="closeDialog"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="rt">
+      <h2 id="rt">Report this photo?</h2>
+      <p class="small" style="margin-top:0">Moderators review reports within a day. ${esc(S.current.user)} won't see who reported it.</p>
+      <fieldset style="border:none;padding:0;margin:0"><legend style="font-weight:600;margin-bottom:6px">Why are you reporting it?</legend>
+      ${reasons.map((x,i)=>`<label class="radio"><input type="radio" name="reason" value="${i}" ${r==i?"checked":""}> ${x}</label>`).join("")}</fieldset>
+      <div class="row" style="margin-top:16px"><button class="btn outline" style="flex:1" data-act="closeDialog">Cancel</button><button class="btn danger" style="flex:1" data-act="confirmReport" ${r==null?"disabled":""}>Report</button></div>
+      <button class="link" style="margin-top:8px" data-act="hide">Just hide it from my gallery instead</button>
+    </div></div>`;
+  }
+  if(S.toast){
+    h+=`<div class="toast" role="status"><span>${S.toast.text}</span>${S.toast.undo?`<button data-act="undo">Undo</button>`:""}</div>`;
+  }
+  if(S.user){
+    h+=`<div class="proto"><button data-act="proto" aria-expanded="${S.proto}">Prototype tools</button>${S.proto?`<div class="panel">
+      <div class="small" style="padding:4px 8px 8px">For demo only, not part of the design.</div>
+      <button data-act="toggleEmpty">${S.forceEmpty?"Show gallery photos":"Show empty gallery state"}</button>
+      <button data-act="resetSubmit">Reset today's submission</button>
+      <button data-act="resetAll">Reset everything (log out)</button>
+    </div>`:""}</div>`;
+  }
+  return h;
+}
+
+function render(){
+  const views={login:vLogin,signup:vSignup,today:vToday,gallery:vGallery,photo:vPhoto,leaderboard:vLeaderboard,past:vPast,pastday:vPastDay};
+  const focusId=document.activeElement&&document.activeElement.id;
+  const caret=document.activeElement&&document.activeElement.selectionStart;
+  $("#app").innerHTML=(views[S.screen]||vLogin)()+overlays();
+  if(focusId){const el=document.getElementById(focusId);if(el&&el.tagName==="INPUT"){el.focus();try{el.setSelectionRange(caret,caret)}catch(e){}}}
+  document.title="Snap Quad – "+({login:"Log in",signup:"Sign up",today:"Today",gallery:"Gallery",photo:"Photo",leaderboard:"Leaderboard",past:"Past prompts",pastday:"Past prompt"}[S.screen]||"");
+}
+
+/* ---------- Validation ---------- */
+const isIllinois=e=>/^[^\s@]+@illinois\.edu$/i.test((e||"").trim());
+function readForm(id){const f={};new FormData(document.getElementById(id)).forEach((v,k)=>f[k]=v);return f}
+
+/* ---------- Events ---------- */
+document.addEventListener("submit",e=>{
+  e.preventDefault();
+  if(e.target.id==="loginForm"){
+    const f=readForm("loginForm");S.form=f;const err={};
+    if(!f.email) err.email="Enter your Illinois email.";
+    else if(!isIllinois(f.email)) err.email="Use your @illinois.edu email to log in.";
+    if(!f.password) err.password="Enter your password.";
+    else if(f.password.length<8) err.password="That password doesn't match this account. Try again or reset it.";
+    S.errors=err;S.notice=null;
+    if(Object.keys(err).length){render();const first=document.querySelector("[aria-invalid]");first&&first.focus();return}
+    S.user={email:f.email.trim(),name:f.email.split("@")[0]};S.form={};go("today");
+  }
+  if(e.target.id==="signupForm"){
+    const f=readForm("signupForm");S.form=f;const err={};
+    if(!isIllinois(f.email)) err.email="Only @illinois.edu emails can join.";
+    if(!f.name||f.name.trim().length<2) err.name="Pick a display name (2+ characters).";
+    if(!f.password||f.password.length<8) err.password="Use at least 8 characters.";
+    if(f.confirm!==f.password) err.confirm="Passwords don't match.";
+    S.errors=err;
+    if(Object.keys(err).length){render();const first=document.querySelector("[aria-invalid]");first&&first.focus();return}
+    S.user={email:f.email.trim(),name:f.name.trim()};S.form={};go("today");toast("Welcome to Snap Quad, "+esc(S.user.name)+"!");
+  }
+});
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-go],[data-act],[data-open],[data-past],[data-openpast]");
+  if(!t){ if(S.menu||S.more){S.menu=false;S.more=false;render()} return }
+  if(t.dataset.go){e.preventDefault();if(t.dataset.go==="gallery")S.current=null;go(t.dataset.go);return}
+  if(t.dataset.open){const p=S.photos.find(x=>x.id==t.dataset.open);go("photo",{current:p});return}
+  if(t.dataset.past){S.past=PAST.find(d=>d.key===t.dataset.past);go("pastday");return}
+  if(t.dataset.openpast){const p=pastPhotos(S.past).find(x=>x.id===t.dataset.openpast);go("photo",{current:p});return}
+  const a=t.dataset.act;
+  if(a==="closeDialog"&&e.target!==t&&t.classList.contains("scrim"))return;
+  const A={
+    menu(){S.menu=!S.menu;render()},
+    logout(){reset();render()},
+    forgot(){const em=($("#email")||{}).value;S.form.email=em;S.notice=isIllinois(em)?`If ${esc(em)} has an account, we sent a reset link. (Prototype: no email is sent.)`:"Enter your @illinois.edu email above, then tap Forgot password.";S.errors={};render()},
+    pick(){$("#file").click()},
+    sample(){S.upload.url=photo(9);S.upload.file="sample";S.upload.error=null;render()},
+    clearPhoto(){S.upload.url=null;S.upload.file=null;render()},
+    submit(){
+      const u=S.upload;u.caption=($("#caption")||{}).value||"";u.progress=0;render();
+      const iv=setInterval(()=>{u.progress=Math.min(100,u.progress+10+Math.round(Math.random()*10));
+        if(u.progress>=100){clearInterval(iv);
+          S.photos.push({id:99,user:me(),caption:u.caption,votes:0,mins:0,seed:9,src:u.url,mine:true,voted:false,hidden:false});
+          S.upload={file:null,url:null,caption:"",error:null,progress:null};render();toast("Photo submitted! It's now in today's gallery.");}
+        else render()},150);
+    },
+    vote(){const p=S.current;p.voted=!p.voted;p.votes+=p.voted?1:-1;render();say(p.voted?`Voted. ${p.votes} votes.`:`Vote removed. ${p.votes} votes.`)},
+    more(){S.more=!S.more;render()},
+    report(){S.more=false;S.dialog="report";S.reportReason=null;render();setTimeout(()=>{const r=document.querySelector('input[name=reason]');r&&r.focus()},0)},
+    closeDialog(){S.dialog=null;render()},
+    confirmReport(){S.dialog=null;render();toast("Thanks. A moderator will review this photo.")},
+    hide(){const p=S.current;p.hidden=true;S.dialog=null;S.lastHidden=p;go("gallery",{current:null});toast("Photo hidden from your gallery.",true)},
+    undo(){if(S.lastHidden){S.lastHidden.hidden=false;S.lastHidden=null}S.toast=null;render();say("Photo restored.")},
+    proto(){S.proto=!S.proto;render()},
+    toggleEmpty(){S.forceEmpty=!S.forceEmpty;S.proto=false;go("gallery")},
+    resetSubmit(){S.photos=S.photos.filter(p=>!p.mine);S.proto=false;go("today")},
+    resetAll(){reset();render()}
+  };
+  if(A[a]){e.preventDefault();A[a]()}
+});
+
+document.addEventListener("change",e=>{
+  if(e.target.id==="sort"){S.sort=e.target.value;render()}
+  if(e.target.name==="reason"){S.reportReason=+e.target.value;render();const r=document.querySelector(`input[name=reason][value="${S.reportReason}"]`);r&&r.focus()}
+  if(e.target.id==="file"){
+    const f=e.target.files[0];if(!f)return;const u=S.upload;
+    u.caption=($("#caption")||{}).value||u.caption;
+    if(!/image\/(jpeg|png|heic)/.test(f.type)){u.error="That file type isn't supported. Choose a JPG or PNG.";render();return}
+    if(f.size>10*1024*1024){u.error=`That photo is ${(f.size/1048576).toFixed(1)} MB. Choose one under 10 MB.`;render();return}
+    u.error=null;u.file=f;if(u.url&&u.url.startsWith("blob:"))URL.revokeObjectURL(u.url);u.url=URL.createObjectURL(f);render();
+  }
+});
+document.addEventListener("input",e=>{if(e.target.id==="caption")S.upload.caption=e.target.value});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(S.dialog||S.menu||S.more||S.proto)){S.dialog=null;S.menu=S.more=S.proto=false;render()}});
+
+render();
+</script>
+</body>
+</html>
