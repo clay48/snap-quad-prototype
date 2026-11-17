@@ -246,7 +246,7 @@ function vLogin(){
     <h1 style="color:var(--navy)">Snap Quad</h1>
     <p class="muted" style="margin-top:0">One campus photo prompt a day.</p>
     <form class="card" id="loginForm" novalidate>
-      ${field("login","Username or Illinois email","text",f.login,"")}
+      ${field("login","Username","text",f.login,"")}
       ${field("password","Password","password",f.password,"")}
       <div style="margin-top:18px"><button class="btn block" type="submit">Log in</button></div>
     </form>
@@ -434,15 +434,15 @@ document.addEventListener("submit",e=>{
   if(e.target.id==="loginForm"){
     const f=readForm("loginForm");S.form=f;const err={};
     const L=(f.login||"").trim();
-    if(!L) err.login="Enter your username or Illinois email.";
-    else if(L.includes("@")&&!isIllinois(L)) err.login="Use your @illinois.edu email, or log in with your username.";
-    else if(!L.includes("@")&&!isUsername(L)) err.login="Usernames are 3–20 characters: letters, numbers, _ or .";
+    if(!L) err.login="Enter your username.";
+    else if(L.includes("@")) err.login="Log in with your username, not your email.";
+    else if(!isUsername(L)) err.login="Usernames are 3–20 characters: letters, numbers, _ or .";
     if(!f.password) err.password="Enter your password.";
     else if(f.password.length<8) err.password="That password doesn't match this account. Try again or reset it.";
     S.errors=err;S.notice=null;
     if(Object.keys(err).length){render();const first=document.querySelector("[aria-invalid]");first&&first.focus();return}
-    const acct=ACCOUNTS.find(a=>a.username.toLowerCase()===L.toLowerCase()||a.email.toLowerCase()===L.toLowerCase());
-    S.user=acct?{email:acct.email,name:acct.username}:{email:L.includes("@")?L:"",name:L.includes("@")?"quad_photog":L};S.form={};go("today");
+    const acct=ACCOUNTS.find(a=>a.username.toLowerCase()===L.toLowerCase());
+    S.user=acct?{email:acct.email,name:acct.username}:{email:"",name:L};S.form={};go("today");
   }
   if(e.target.id==="signupForm"){
     const f=readForm("signupForm");S.form=f;const err={};
