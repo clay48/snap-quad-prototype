@@ -176,14 +176,14 @@ const PROMPT="Something orange";
 
 function seedPhotos(){
   return [
-    {id:1,user:"lwong5",caption:"traffic cone by Grainger",votes:12,mins:35,seed:2},
-    {id:2,user:"mrodri7",caption:"pumpkins outside the union",votes:9,mins:120,seed:0},
-    {id:3,user:"kpatel3",caption:"Illini orange on the Alma Mater",votes:7,mins:200,seed:5},
-    {id:4,user:"dnguyen",caption:"sunset from the 6th floor",votes:4,mins:15,seed:4},
-    {id:5,user:"aokafor",caption:"maple leaves on the Quad",votes:3,mins:300,seed:3},
-    {id:6,user:"bchen9",caption:"MTD bus stripe",votes:2,mins:55,seed:1},
-    {id:7,user:"sgarcia",caption:"clementine at lunch",votes:1,mins:80,seed:7},
-    {id:8,user:"tmiller",caption:"orange bike lock",votes:0,mins:5,seed:6}
+    {id:1,user:"orange_cone_era",caption:"traffic cone by Grainger",votes:12,mins:35,seed:2},
+    {id:2,user:"pumpkinpatch",caption:"pumpkins outside the union",votes:9,mins:120,seed:0},
+    {id:3,user:"alma_mater_fan",caption:"Illini orange on the Alma Mater",votes:7,mins:200,seed:5},
+    {id:4,user:"sunset.chaser",caption:"sunset from the 6th floor",votes:4,mins:15,seed:4},
+    {id:5,user:"quadsquirrel",caption:"maple leaves on the Quad",votes:3,mins:300,seed:3},
+    {id:6,user:"mtd_rider",caption:"MTD bus stripe",votes:2,mins:55,seed:1},
+    {id:7,user:"clementine.club",caption:"clementine at lunch",votes:1,mins:80,seed:7},
+    {id:8,user:"lockedin",caption:"orange bike lock",votes:0,mins:5,seed:6}
   ].map(p=>({...p,voted:false,hidden:false}));
 }
 const PAST=[
@@ -192,7 +192,7 @@ const PAST=[
   {key:"bikes",title:"Bikes on the Quad",date:daysAgo(3),count:44,base:30},
   {key:"sunset",title:"Sunset",date:daysAgo(4),count:47,base:40}
 ];
-const NAMES=["kpatel3","dnguyen","lwong5","mrodri7","aokafor","bchen9"];
+const NAMES=["alma_mater_fan","sunset.chaser","orange_cone_era","pumpkinpatch","quadsquirrel","mtd_rider"];
 
 let S;
 function reset(){
@@ -227,7 +227,7 @@ function shell(inner,tab){
     <a class="brand" href="#" data-go="today">Snap Quad</a>
     <nav class="topnav" aria-label="Main">${tabs.map(([k,l])=>`<button data-go="${k}" ${cur(k)}>${l}</button>`).join("")}</nav>
     <button class="avatar" aria-label="Account menu" aria-expanded="${S.menu}" data-act="menu">${esc(S.user.name[0].toUpperCase())}</button>
-    ${S.menu?`<div class="menu" role="menu"><div class="small" style="padding:8px 12px">Signed in as<br><b style="color:var(--ink)">${esc(S.user.email)}</b></div><button role="menuitem" data-act="logout">Log out</button></div>`:""}
+    ${S.menu?`<div class="menu" role="menu"><div class="small" style="padding:8px 12px">Signed in as<br><b style="color:var(--ink)">@${esc(S.user.name)}</b>${S.user.email?`<br>${esc(S.user.email)}`:""}</div><button role="menuitem" data-act="logout">Log out</button></div>`:""}
   </div></header>
   <main id="main">${inner}</main>
   <nav class="tabs" aria-label="Main">${tabs.map(([k,l,ic])=>`<button data-go="${k}" ${cur(k)}>${ic}<span>${l}</span></button>`).join("")}</nav>`;
@@ -244,19 +244,17 @@ function vLogin(){
   const f=S.form;
   return `<main><div class="auth">
     <h1 style="color:var(--navy)">Snap Quad</h1>
-    <p class="muted" style="margin-top:0">One campus photo prompt a day. Log in with your Illinois email.</p>
+    <p class="muted" style="margin-top:0">One campus photo prompt a day.</p>
     <form class="card" id="loginForm" novalidate>
-      ${field("email","Email","email",f.email,"")}
+      ${field("login","Username or Illinois email","text",f.login,"")}
       ${field("password","Password","password",f.password,"")}
       <div style="margin-top:18px"><button class="btn block" type="submit">Log in</button></div>
-      <button class="link" type="button" data-act="forgot">Forgot password?</button>
-      ${S.notice?`<p class="small" role="status">${S.notice}</p>`:""}
     </form>
     <div class="card" style="margin-top:16px;text-align:center">
       <p style="margin:0 0 10px">No account yet?</p>
       <button class="btn outline block" data-go="signup">Create an account</button>
     </div>
-    <p class="small" style="text-align:center;margin-top:16px">Prototype tip: any <b>@illinois.edu</b> email and an 8+ character password works.</p>
+    <p class="small" style="text-align:center;margin-top:16px">Prototype tip: log in with any username (try <b>quad_photog</b>) and an 8+ character password, or create an account.</p>
   </div></main>`;
 }
 
@@ -267,8 +265,8 @@ function vSignup(){
     <h1 style="color:var(--navy)">Create your account</h1>
     <p class="muted" style="margin-top:0">Only @illinois.edu emails can join.</p>
     <form class="card" id="signupForm" novalidate>
-      ${field("email","Illinois email","email",f.email,"Example: jlee42@illinois.edu")}
-      ${field("name","Display name","text",f.name,"Shown next to your photos")}
+      ${field("email","Illinois email","email",f.email,"Used to verify you're a student. Never shown to others.")}
+      ${field("username","Username","text",f.username,"Shown on your photos. 3–20 characters: letters, numbers, _ or .")}
       ${field("password","Password","password",f.password,"At least 8 characters")}
       ${field("confirm","Confirm password","password",f.confirm,"")}
       <div style="margin-top:18px"><button class="btn block" type="submit">Create account</button></div>
@@ -424,6 +422,9 @@ function render(){
 }
 
 /* ---------- Validation ---------- */
+const isUsername=u=>/^[A-Za-z0-9_.]{3,20}$/.test(u||"");
+const ACCOUNTS=[];
+const TAKEN=()=>[...S.photos.map(p=>p.user),...NAMES,...ACCOUNTS.map(a=>a.username)].map(x=>x.toLowerCase());
 const isIllinois=e=>/^[^\s@]+@illinois\.edu$/i.test((e||"").trim());
 function readForm(id){const f={};new FormData(document.getElementById(id)).forEach((v,k)=>f[k]=v);return f}
 
@@ -432,23 +433,28 @@ document.addEventListener("submit",e=>{
   e.preventDefault();
   if(e.target.id==="loginForm"){
     const f=readForm("loginForm");S.form=f;const err={};
-    if(!f.email) err.email="Enter your Illinois email.";
-    else if(!isIllinois(f.email)) err.email="Use your @illinois.edu email to log in.";
+    const L=(f.login||"").trim();
+    if(!L) err.login="Enter your username or Illinois email.";
+    else if(L.includes("@")&&!isIllinois(L)) err.login="Use your @illinois.edu email, or log in with your username.";
+    else if(!L.includes("@")&&!isUsername(L)) err.login="Usernames are 3–20 characters: letters, numbers, _ or .";
     if(!f.password) err.password="Enter your password.";
     else if(f.password.length<8) err.password="That password doesn't match this account. Try again or reset it.";
     S.errors=err;S.notice=null;
     if(Object.keys(err).length){render();const first=document.querySelector("[aria-invalid]");first&&first.focus();return}
-    S.user={email:f.email.trim(),name:f.email.split("@")[0]};S.form={};go("today");
+    const acct=ACCOUNTS.find(a=>a.username.toLowerCase()===L.toLowerCase()||a.email.toLowerCase()===L.toLowerCase());
+    S.user=acct?{email:acct.email,name:acct.username}:{email:L.includes("@")?L:"",name:L.includes("@")?"quad_photog":L};S.form={};go("today");
   }
   if(e.target.id==="signupForm"){
     const f=readForm("signupForm");S.form=f;const err={};
     if(!isIllinois(f.email)) err.email="Only @illinois.edu emails can join.";
-    if(!f.name||f.name.trim().length<2) err.name="Pick a display name (2+ characters).";
+    const U=(f.username||"").trim();
+    if(!isUsername(U)) err.username="Use 3–20 characters: letters, numbers, _ or .";
+    else if(TAKEN().includes(U.toLowerCase())) err.username="That username is taken. Try another.";
     if(!f.password||f.password.length<8) err.password="Use at least 8 characters.";
     if(f.confirm!==f.password) err.confirm="Passwords don't match.";
     S.errors=err;
     if(Object.keys(err).length){render();const first=document.querySelector("[aria-invalid]");first&&first.focus();return}
-    S.user={email:f.email.trim(),name:f.name.trim()};S.form={};go("today");toast("Welcome to Snap Quad, "+esc(S.user.name)+"!");
+    ACCOUNTS.push({email:f.email.trim(),username:U});S.user={email:f.email.trim(),name:U};S.form={};go("today");toast("Welcome to Snap Quad, "+esc(S.user.name)+"!");
   }
 });
 
@@ -464,7 +470,6 @@ document.addEventListener("click",e=>{
   const A={
     menu(){S.menu=!S.menu;render()},
     logout(){reset();render()},
-    forgot(){const em=($("#email")||{}).value;S.form.email=em;S.notice=isIllinois(em)?`If ${esc(em)} has an account, we sent a reset link. (Prototype: no email is sent.)`:"Enter your @illinois.edu email above, then tap Forgot password.";S.errors={};render()},
     pick(){$("#file").click()},
     sample(){S.upload.url=photo(9);S.upload.file="sample";S.upload.error=null;render()},
     clearPhoto(){S.upload.url=null;S.upload.file=null;render()},
